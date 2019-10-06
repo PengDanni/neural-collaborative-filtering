@@ -45,13 +45,16 @@ class MetronAtK(object):
     def cal_hit_ratio(self):
         """Hit Ratio @ top_K"""
         full, top_k = self._subjects, self._top_k
-        top_k = full[full['rank']<=top_k]
-        test_in_top_k =top_k[top_k['test_item'] == top_k['item']]  # golden items hit in the top_K items
+        # extract the top k items for each user
+        top_k = full[full['rank'] <= top_k]
+        # collect row if test item is in top k items
+        test_in_top_k = top_k[top_k['test_item'] == top_k['item']]  # golden items hit in the top_K items
         return len(test_in_top_k) * 1.0 / full['user'].nunique()
 
     def cal_ndcg(self):
         full, top_k = self._subjects, self._top_k
         top_k = full[full['rank'] <= top_k]
-        test_in_top_k =top_k[top_k['test_item'] == top_k['item']]
-        test_in_top_k['ndcg'] = test_in_top_k['rank'].apply(lambda x: math.log(2) / math.log(1 + x)) # the rank starts from 1
-        return test_in_top_k['ndcg'].sum() * 1.0 / full['user'].nunique()
+        test_in_top_k = top_k[top_k['test_item'] == top_k['item']]
+        # discounted gain for top k
+        test_in_top_k['gain'] = test_in_top_k['rank'].apply(lambda x: math.log(2) / math.log(1 + x))  # same relevance
+        return test_in_top_k['gain'].sum() * 1.0 / full['user'].nunique()  # dcg/idcg
