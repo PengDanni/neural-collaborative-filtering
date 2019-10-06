@@ -12,7 +12,6 @@ class UserItemRatingDataset(Dataset):
     def __init__(self, user_tensor, item_tensor, target_tensor):
         """
         args:
-
             target_tensor: torch.Tensor, the corresponding rating for <user, item> pair
         """
         self.user_tensor = user_tensor
@@ -62,7 +61,7 @@ class SampleGenerator(object):
         return ratings
 
     def _split_loo(self, ratings):
-        """leave one out train/test split """
+        """leave one out train/test split for each user"""
         ratings['rank_latest'] = ratings.groupby(['userId'])['timestamp'].rank(method='first', ascending=False)
         test = ratings[ratings['rank_latest'] == 1]
         train = ratings[ratings['rank_latest'] > 1]
@@ -74,14 +73,14 @@ class SampleGenerator(object):
         interact_status = ratings.groupby('userId')['itemId'].apply(set).reset_index().rename(
             columns={'itemId': 'interacted_items'})
         interact_status['negative_items'] = interact_status['interacted_items'].apply(lambda x: self.item_pool - x)
-        interact_status['negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(x, 99))
+        interact_status['negative_samples'] = interact_status['negative_items'].apply(lambda x: random.sample(x, 99))  # 99 neg samples for each user ????
         return interact_status[['userId', 'negative_items', 'negative_samples']]
 
     def instance_a_train_loader(self, num_negatives, batch_size):
         """instance train loader for one training epoch"""
         users, items, ratings = [], [], []
         train_ratings = pd.merge(self.train_ratings, self.negatives[['userId', 'negative_items']], on='userId')
-        train_ratings['negatives'] = train_ratings['negative_items'].apply(lambda x: random.sample(x, num_negatives))
+        train_ratings['negatives'] = train_ratings['negative_items'].apply(lambda x: random.sample(x, num_negatives))  # num_negatives <= train_ratings['negative_items'] = 99
         for row in train_ratings.itertuples():
             users.append(int(row.userId))
             items.append(int(row.itemId))
