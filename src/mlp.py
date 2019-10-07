@@ -15,7 +15,7 @@ class MLP(torch.nn.Module):
         self.embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.latent_dim)
         self.embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.latent_dim)
 
-        self.fc_layers = torch.nn.ModuleList()
+        self.fc_layers = torch.nn.ModuleList()  # multiple fc layers
         for idx, (in_size, out_size) in enumerate(zip(config['layers'][:-1], config['layers'][1:])):
             self.fc_layers.append(torch.nn.Linear(in_size, out_size))
 

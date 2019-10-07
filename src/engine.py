@@ -7,8 +7,8 @@ from metrics import MetronAtK
 
 
 class Engine(object):
-    """Meta Engine for training & evaluating NCF model
-
+    """
+    Meta Engine for training & evaluating NCF model
     Note: Subclass should implement self.model !
     """
 
@@ -28,16 +28,17 @@ class Engine(object):
         if self.config['use_cuda'] is True:
             users, items, ratings = users.cuda(), items.cuda(), ratings.cuda()
         self.opt.zero_grad()
+        # .requires_grad_() ???
         ratings_pred = self.model(users, items)
         loss = self.crit(ratings_pred.view(-1), ratings)
         loss.backward()
         self.opt.step()
-        loss = loss.item()
+        loss = loss.item()  # loss.detach().item() ????
         return loss
 
     def train_an_epoch(self, train_loader, epoch_id):
         assert hasattr(self, 'model'), 'Please specify the exact model !'
-        self.model.train()
+        self.model.train()  # set model to training mode
         total_loss = 0
         for batch_id, batch in enumerate(train_loader):
             assert isinstance(batch[0], torch.LongTensor)
@@ -50,7 +51,7 @@ class Engine(object):
 
     def evaluate(self, evaluate_data, epoch_id):
         assert hasattr(self, 'model'), 'Please specify the exact model !'
-        self.model.eval()
+        self.model.eval()  # set model to evaluation mode
         with torch.no_grad():
             test_users, test_items = evaluate_data[0], evaluate_data[1]
             negative_users, negative_items = evaluate_data[2], evaluate_data[3]
@@ -61,19 +62,19 @@ class Engine(object):
                 negative_items = negative_items.cuda()
             test_scores = self.model(test_users, test_items)
             negative_scores = self.model(negative_users, negative_items)
-            if self.config['use_cuda'] is True:
+            if self.config['use_cuda'] is True:  # ????
                 test_users = test_users.cpu()
                 test_items = test_items.cpu()
                 test_scores = test_scores.cpu()
                 negative_users = negative_users.cpu()
                 negative_items = negative_items.cpu()
                 negative_scores = negative_scores.cpu()
-            self._metron.subjects = [test_users.data.view(-1).tolist(),
-                                 test_items.data.view(-1).tolist(),
-                                 test_scores.data.view(-1).tolist(),
-                                 negative_users.data.view(-1).tolist(),
-                                 negative_items.data.view(-1).tolist(),
-                                 negative_scores.data.view(-1).tolist()]
+            self._metron.subjects = [test_users.data.view(-1).tolist(),  # subjects.setter
+                                     test_items.data.view(-1).tolist(),
+                                     test_scores.data.view(-1).tolist(),
+                                     negative_users.data.view(-1).tolist(),
+                                     negative_items.data.view(-1).tolist(),
+                                     negative_scores.data.view(-1).tolist()]
         hit_ratio, ndcg = self._metron.cal_hit_ratio(), self._metron.cal_ndcg()
         self._writer.add_scalar('performance/HR', hit_ratio, epoch_id)
         self._writer.add_scalar('performance/NDCG', ndcg, epoch_id)
