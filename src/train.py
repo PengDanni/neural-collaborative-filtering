@@ -78,7 +78,7 @@ print('Range of userId is [{}, {}]'.format(ml1m_rating.userId.min(), ml1m_rating
 print('Range of itemId is [{}, {}]'.format(ml1m_rating.itemId.min(), ml1m_rating.itemId.max()))
 # DataLoader for training
 sample_generator = SampleGenerator(ratings=ml1m_rating)
-evaluate_data = sample_generator.evaluate_data
+evaluate_data = sample_generator.evaluate_data  # property getter
 # Specify the exact model
 config = gmf_config
 engine = GMFEngine(config)
