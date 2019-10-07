@@ -25,7 +25,7 @@ class MLP(torch.nn.Module):
     def forward(self, user_indices, item_indices):
         user_embedding = self.embedding_user(user_indices)
         item_embedding = self.embedding_item(item_indices)
-        vector = torch.cat([user_embedding, item_embedding], dim=-1)  # the concat latent vector
+        vector = torch.cat([user_embedding, item_embedding], dim=-1)  # the concat latent vector along the last dim
         for idx, _ in enumerate(range(len(self.fc_layers))):
             vector = self.fc_layers[idx](vector)
             vector = torch.nn.ReLU()(vector)

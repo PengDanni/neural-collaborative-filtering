@@ -32,9 +32,9 @@ class NeuMF(torch.nn.Module):
         user_embedding_mf = self.embedding_user_mf(user_indices)
         item_embedding_mf = self.embedding_item_mf(item_indices)
 
-        mlp_vector = torch.cat([user_embedding_mlp, item_embedding_mlp], dim=-1)  # the concat latent vector
-        mf_vector =torch.mul(user_embedding_mf, item_embedding_mf)
+        mf_vector = torch.mul(user_embedding_mf, item_embedding_mf)
 
+        mlp_vector = torch.cat([user_embedding_mlp, item_embedding_mlp], dim=-1)  # the concat latent vector
         for idx, _ in enumerate(range(len(self.fc_layers))):
             mlp_vector = self.fc_layers[idx](mlp_vector)
             mlp_vector = torch.nn.ReLU()(mlp_vector)
@@ -55,7 +55,6 @@ class NeuMF(torch.nn.Module):
         if config['use_cuda'] is True:
             mlp_model.cuda()
         resume_checkpoint(mlp_model, model_dir=config['pretrain_mlp'], device_id=config['device_id'])
-
         self.embedding_user_mlp.weight.data = mlp_model.embedding_user.weight.data
         self.embedding_item_mlp.weight.data = mlp_model.embedding_item.weight.data
         for idx in range(len(self.fc_layers)):
@@ -69,6 +68,7 @@ class NeuMF(torch.nn.Module):
         self.embedding_user_mf.weight.data = gmf_model.embedding_user.weight.data
         self.embedding_item_mf.weight.data = gmf_model.embedding_item.weight.data
 
+        # why 0.5 ????
         self.affine_output.weight.data = 0.5 * torch.cat([mlp_model.affine_output.weight.data, gmf_model.affine_output.weight.data], dim=-1)
         self.affine_output.bias.data = 0.5 * (mlp_model.affine_output.bias.data + gmf_model.affine_output.bias.data)
 
