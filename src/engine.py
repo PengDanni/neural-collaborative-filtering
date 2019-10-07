@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Variable
 from tensorboardX import SummaryWriter
 
-from utils import save_checkpoint, use_optimizer
+from model_utils import save_checkpoint, use_optimizer
 from metrics import MetronAtK
 
 
